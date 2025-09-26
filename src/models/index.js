@@ -17,7 +17,7 @@ db.Prescription = require('./prescription')(sequelize);
 db.Analyse = require('./analyse')(sequelize);
 db.Disponibilite = require('./disponibilite')(sequelize);
 
-db.Sequelize = sequelize;
+db.sequelize = sequelize;
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) db[modelName].associate(db);

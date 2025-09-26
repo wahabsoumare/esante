@@ -1,9 +1,18 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const MedecinSpecialite = sequelize.define('MedecinSpecialite', {
-    medecin_user_id: { type: DataTypes.UUID, allowNull: false, primaryKey: true },
-    specialite_id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true }
+    medecin_user_id: { 
+      type: DataTypes.UUID, 
+      allowNull: false, primaryKey: true 
+    },
+    specialite_id: {
+      type: DataTypes.UUID, 
+      allowNull: false, 
+      primaryKey: true 
+    }
   }, {
-    tableName: 'medecin_specialite',
+    tableName: 'medecin_specialites',
     timestamps: false
   });
 

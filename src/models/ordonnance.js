@@ -1,10 +1,29 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Ordonnance = sequelize.define('Ordonnance', {
-    id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
-    consultation_id: { type: DataTypes.UUID },
-    date_emission: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    contenu: { type: DataTypes.TEXT },
-    signature_numerique: { type: DataTypes.TEXT }
+    id: { 
+      type: DataTypes.UUID, 
+      primaryKey: true, 
+      defaultValue: DataTypes.UUIDV4 
+    },
+
+    consultation_id: { 
+      type: DataTypes.UUID 
+    },
+
+    date_emission: { 
+      type: DataTypes.DATE, 
+      defaultValue: DataTypes.NOW 
+    },
+
+    contenu: { 
+      type: DataTypes.TEXT 
+    },
+    
+    signature_numerique: { 
+      type: DataTypes.TEXT 
+    }
   }, {
     tableName: 'ordonnance',
     timestamps: false

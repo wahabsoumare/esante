@@ -1,10 +1,23 @@
-module.exports = (sequelize, DataTypes) => {
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
   const Prescription = sequelize.define('Prescription', {
-    id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
-    ordonnance_id: { type: DataTypes.UUID },
-    description: { type: DataTypes.TEXT },
-    periode: { type: DataTypes.STRING(150) },
-    indications: { type: DataTypes.TEXT }
+    id: { type: DataTypes.UUID, 
+      primaryKey: true, 
+      defaultValue: DataTypes.UUIDV4 
+    },
+    ordonnance_id: { 
+      type: DataTypes.UUID 
+    },
+    description: { 
+      type: DataTypes.TEXT 
+    },
+    periode: { 
+      type: DataTypes.STRING(150) 
+    },
+    indications: { 
+      type: DataTypes.TEXT 
+    }
   }, {
     tableName: 'prescription',
     timestamps: false

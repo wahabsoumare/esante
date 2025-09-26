@@ -15,6 +15,10 @@ const rendezvousRoutes = require('./src/routes/rendezvousRoutes');
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+//swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
