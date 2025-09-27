@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+
+.btn {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium shadow-soft transition
+         bg-brand-600 text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600;
+}
+.btn-outline {
+  @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium border border-brand-600 text-brand-600
+         hover:bg-brand-50 transition;
+}
+.card { @apply bg-white rounded-2xl p-6 shadow-soft; }
+.section { @apply py-16; }
+.h2 { @apply text-3xl font-semibold text-brand-900; }
+.h3 { @apply text-xl font-semibold text-brand-900; }
+.small-muted { @apply text-sm text-zinc-500; }
+.h2 { @apply text-3xl font-semibold text-brand-900 text-center; } /* ← centré */
+.h3 { @apply text-xl font-semibold text-brand-900; }
+
