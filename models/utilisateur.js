@@ -78,7 +78,7 @@ const Utilisateur = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
-        isIn: ['ROLE_ADMIN', 'ROLE_SECRETAIRE'],
+        isIn: [['ROLE_ADMIN', 'ROLE_SECRETAIRE', 'ROLE_MEDECIN']],
       },
     },
     dateajout: {
