@@ -666,6 +666,19 @@
         }
       }
     },
+    "/api/utilisateurs/public/medecins": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/utilisateurs/login": {
       "post": {
         "description": "",
@@ -805,6 +818,9 @@
                 },
                 "password": {
                   "example": "any"
+                },
+                "specialite": {
+                  "example": "any"
                 }
               }
             }
@@ -909,6 +925,9 @@
                   "example": "any"
                 },
                 "typecompte": {
+                  "example": "any"
+                },
+                "specialite": {
                   "example": "any"
                 }
               }
@@ -1026,6 +1045,9 @@
                   "example": "any"
                 },
                 "typecompte": {
+                  "example": "any"
+                },
+                "specialite": {
                   "example": "any"
                 }
               }
