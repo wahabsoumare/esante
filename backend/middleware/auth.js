@@ -56,7 +56,7 @@ const restrictToRoles = (...roles) => {
       console.log('restrictToRoles: Données utilisateur manquantes');
       return res.status(401).json({ error: 'Utilisateur non authentifié', details: 'Aucune donnée utilisateur trouvée' });
     }
-    if (!roles.includes(req.user.typecompte)) {
+    if (!roles.includes(req.user.typecompte) && !roles.includes(req.user.role)) {
       console.log('restrictToRoles: Accès refusé pour le rôle:', req.user.typecompte);
       return res.status(403).json({ error: 'Accès non autorisé', details: `Rôle ${req.user.typecompte} non autorisé` });
     }

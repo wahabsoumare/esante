@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors'); 
 const path = require('path');
 
+const disponibiliteRoutes = require('./routes/disponibiliteRoutes')
 const etablissementRoutes = require('./routes/etablissementRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const utilisateurRoutes = require('./routes/utilisateurRoutes');
@@ -55,6 +56,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // });
 // app.use(limiter);
 
+app.use('/api/disponibilites', disponibiliteRoutes);
 app.use('/api/etablissements', etablissementRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
