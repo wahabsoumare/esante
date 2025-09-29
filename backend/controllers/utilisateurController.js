@@ -1,5 +1,6 @@
 const Utilisateur = require('../models/utilisateur');
 const Medecin = require('../models/medecin');
+const Patient = require('../models/patient');
 const redisClient = require('../config/redis');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -207,34 +208,62 @@ const loginUtilisateur = async (req, res) => {
       include: [{ model: Medecin, as: 'medecin' }]
     });
 
-    if (!utilisateur) {
+    const patient = await Patient.findOne({ where: { email: emailu } });
+
+    if (!utilisateur && !patient) {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
+    
+    if (utilisateur) {
+        const isPasswordValid = await bcrypt.compare(password, utilisateur.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({ error: 'Identifiants invalides' });
+        }
+      
+      const token = jwt.sign(
+        { idu: utilisateur.idu, emailu: utilisateur.emailu, typecompte: utilisateur.typecompte },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
 
-    const isPasswordValid = await bcrypt.compare(password, utilisateur.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
+      const tokenKey = `token:${token}`;
+      await redisClient.setEx(tokenKey, 24 * 60 * 60, utilisateur.idu.toString());
+
+      res.json({
+        token,
+        user: {
+          ...utilisateur.get(),
+          typecompte: utilisateur.typecompte,
+          password: undefined
+        },
+      });
+   } else if (patient){
+      const isPasswordValid = await bcrypt.compare(password, patient.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Identifiants invalides' });
+      }
+
+      const token = jwt.sign(
+        { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      const tokenKey = `token:${token}`;
+      await redisClient.setEx(tokenKey, 24 * 60 * 60, patient.id_patient.toString());
+
+      res.json({
+        token,
+        user: {
+          ...patient.get(),
+          typecompte: patient.typecompte,
+          password: undefined
+        },
+      });
     }
-
-    const token = jwt.sign(
-      { idu: utilisateur.idu, emailu: utilisateur.emailu, typecompte: utilisateur.typecompte },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    const tokenKey = `token:${token}`;
-    await redisClient.setEx(tokenKey, 24 * 60 * 60, utilisateur.idu.toString());
-
-    res.json({
-      token,
-      utilisateur: {
-        ...utilisateur.get(),
-        password: undefined
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
-  }
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    }
 };
 
 // Logout (inchangé)
@@ -327,7 +356,7 @@ const getPublicMedecins = async (req, res) => {
   try {
     const medecins = await Utilisateur.findAll({
       where: { typecompte: 'ROLE_MEDECIN', etat: 'actif' }, // seulement les actifs
-      attributes: ['idu', 'prenomu', 'nomu'], // infos basiques
+      attributes: ['idu', 'prenomu', 'nomu', 'sexe', 'adresse'], // infos basiques
       include: [{
         model: Medecin,
         as: 'medecin',
@@ -335,7 +364,17 @@ const getPublicMedecins = async (req, res) => {
       }]
     });
 
-    res.json(medecins);
+
+  const result = medecins.map(m => {
+  const medecin = m.toJSON(); // convertir en objet simple
+  return {
+      ...medecin,               // toutes les infos du user
+      specialite: medecin.medecin?.specialite, // extraire spécialité
+      medecin: undefined        // enlever l'objet medecin
+    };
+  });
+
+  res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }

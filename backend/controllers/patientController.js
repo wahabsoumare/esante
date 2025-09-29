@@ -149,7 +149,7 @@ const loginPatient = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id_patient: patient.id_patient, email: patient.email, role: patient.role },
+      { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
