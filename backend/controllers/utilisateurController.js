@@ -355,8 +355,42 @@ const updateProfile = async (req, res) => {
 const getPublicMedecins = async (req, res) => {
   try {
     const medecins = await Utilisateur.findAll({
-      where: { typecompte: 'ROLE_MEDECIN', etat: 'actif' }, // seulement les actifs
-      attributes: ['idu', 'prenomu', 'nomu', 'sexe', 'adresse'], // infos basiques
+      where: { typecompte: 'ROLE_MEDECIN', etat: 'actif' },
+      attributes: ['idu', 'prenomu', 'nomu', 'sexe', 'adresse'],
+      include: [{
+        model: Medecin,
+        as: 'medecin',
+        attributes: ['idm', 'specialite']   // ✅ récupérer idm aussi
+      }]
+    });
+
+    const result = medecins.map(m => {
+      const medecin = m.toJSON();
+      return {
+        idm: medecin.medecin?.idm,           // ✅ exposer l'id médecin
+        specialite: medecin.medecin?.specialite,
+        idu: medecin.idu,
+        prenomu: medecin.prenomu,
+        nomu: medecin.nomu,
+        sexe: medecin.sexe,
+        adresse: medecin.adresse
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+};
+
+
+const getPublicMedecinById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const medecin = await Utilisateur.findOne({
+      where: { idu: id, typecompte: 'ROLE_MEDECIN', etat: 'actif' }, // filtre par ID et actif
+      attributes: ['idu', 'prenomu', 'nomu', 'sexe', 'adresse'],
       include: [{
         model: Medecin,
         as: 'medecin',
@@ -364,22 +398,24 @@ const getPublicMedecins = async (req, res) => {
       }]
     });
 
+    if (!medecin) {
+      return res.status(404).json({ message: "Médecin introuvable ou inactif" });
+    }
 
-  const result = medecins.map(m => {
-  const medecin = m.toJSON(); // convertir en objet simple
-  return {
-      ...medecin,               // toutes les infos du user
-      specialite: medecin.medecin?.specialite, // extraire spécialité
-      medecin: undefined        // enlever l'objet medecin
+    const data = medecin.toJSON();
+    const result = {
+      ...data,
+      specialite: data.medecin?.specialite,
+      medecin: undefined
     };
-  });
 
-  res.json(result);
+    res.json(result);
+
   } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    console.error("Erreur récupération médecin:", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
-
 
 module.exports = {
   getAllUtilisateurs,
@@ -391,5 +427,6 @@ module.exports = {
   logoutUtilisateur,
   getProfile,
   updateProfile,
-  getPublicMedecins
+  getPublicMedecins,
+  getPublicMedecinById
 };

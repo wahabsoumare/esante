@@ -18,7 +18,6 @@ const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 router.post(
   '/',
   authMiddleware,
-  restrictToRoles('ROLE_PATIENT'),
   createRendezVous
 );
 

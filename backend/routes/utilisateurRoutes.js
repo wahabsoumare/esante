@@ -10,10 +10,12 @@ const {
   logoutUtilisateur,
   getProfile,
   updateProfile,
-  getPublicMedecins
+  getPublicMedecins,
+  getPublicMedecinById
 } = require('../controllers/utilisateurController');
 
 router.get('/public/medecins', getPublicMedecins);
+router.get('/public/medecins/:id', getPublicMedecinById);
 
 const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 

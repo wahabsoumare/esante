@@ -1,6 +1,6 @@
 const Disponibilite = require('../models/disponibilite');
 const Medecin = require('../models/medecin');
-const User = require('../models/utilisateur'); // pour récupérer nom/prénom
+const Utilisateur = require('../models/utilisateur'); // pour récupérer nom/prénom
 
 // 1. Créer une disponibilité
 const createDisponibilite = async (req, res) => {
@@ -115,7 +115,7 @@ const getAllDisponibilites = async (req, res) => {
           as: 'medecin',
           include: [
             {
-              model: User,
+              model: Utilisateur,
               as: 'utilisateur',
               attributes: ['prenomu', 'nomu', 'emailu']
             }
@@ -135,12 +135,13 @@ const getAllDisponibilites = async (req, res) => {
 // 6. Récupérer toutes les disponibilités d’un médecin spécifique
 const getDisponibilitesByMedecin = async (req, res) => {
   try {
-    const { id } = req.params; // id du médecin
-
-    const medecin = await Medecin.findByPk(id, {
+    const { id } = req.params;
+    const idm = id;
+    // 🔹 Récupération du médecin avec son utilisateur lié
+    const medecin = await Medecin.findByPk(idm, {
       include: {
-        model: User,
-        as: 'utilisateur',
+        model: Utilisateur,  // ✅ pas "User"
+        as: 'utilisateur',   // ✅ alias correct
         attributes: ['prenomu', 'nomu', 'emailu']
       }
     });
@@ -149,25 +150,29 @@ const getDisponibilitesByMedecin = async (req, res) => {
       return res.status(404).json({ message: "Médecin non trouvé." });
     }
 
+    // 🔹 Vérifie bien la FK dans Disponibilite (ici supposée MedecinId)
     const dispos = await Disponibilite.findAll({
-      where: { medecinId: id, actif: true },
+      where: { medecinId: idm, actif: true },
       order: [['jour', 'ASC'], ['heureDebut', 'ASC']]
     });
 
     res.json({
       medecin: {
         id: medecin.idm,
-        nom: medecin.utilisateur.prenomu,
-        prenom: medecin.utilisateur.nomu,
-        email: medecin.utilisateur.emailu,
+        prenom: medecin.utilisateur?.prenomu ?? null,
+        nom: medecin.utilisateur?.nomu ?? null,
+        email: medecin.utilisateur?.emailu ?? null,
         specialite: medecin.specialite
       },
       disponibilites: dispos
     });
+
   } catch (error) {
+    console.error("Erreur getDisponibilitesByMedecin:", error);
     res.status(500).json({ message: "Erreur lors de la récupération", error: error.message });
   }
 };
+
 
 module.exports = {
   createDisponibilite,

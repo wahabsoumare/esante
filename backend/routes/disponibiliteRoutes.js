@@ -12,6 +12,9 @@ const {
 
 const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 
+router.get('/', authMiddleware, getAllDisponibilites);
+
+router.get('/medecin/:id', getDisponibilitesByMedecin);
 // Médecin
 router.post('/', authMiddleware, restrictToRoles('ROLE_MEDECIN'), createDisponibilite);
 
@@ -22,8 +25,5 @@ router.delete('/:id', authMiddleware, restrictToRoles('ROLE_MEDECIN'), deleteDis
 router.patch('/:id/toggle', authMiddleware, restrictToRoles('ROLE_MEDECIN'), toggleDisponibilite);
 
 // Patients / Admins / Médecins
-router.get('/', authMiddleware, getAllDisponibilites);
-
-router.get('/medecin/:id', authMiddleware, getDisponibilitesByMedecin);
 
 module.exports = router;
