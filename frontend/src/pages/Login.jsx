@@ -9,13 +9,14 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from?.pathname || '/patient'
+  const from = location.state?.from?.pathname || '/'
 
-  const [email, setEmail] = useState('')
+  //  backend attend "emailu"
+  const [emailu, setEmailu] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [globalError, setGlobalError] = useState(null)   //  message d'erreur global
-  const [globalSuccess, setGlobalSuccess] = useState(null) //  message succès
+  const [globalError, setGlobalError] = useState(null)
+  const [globalSuccess, setGlobalSuccess] = useState(null)
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -24,21 +25,38 @@ export default function Login() {
     setGlobalSuccess(null)
 
     try {
-      const response = await axios.post('http://localhost:3000/api/patients/login', {
-        email,
-        password
+      const response = await axios.post('http://localhost:3000/api/utilisateurs/login', {
+        emailu,   // correspond au backend
+        password,
       })
 
       const userData = response.data
       login(userData)
 
       setGlobalSuccess('Connexion réussie — redirection en cours...')
-      setTimeout(() => navigate(from, { replace: true }), 2000) //  navigation propre
+
+      // 🔀 redirection dynamique selon le type de compte
+      let redirectPath = from
+      const type = userData?.user?.typecompte || userData?.user?.role
+
+      if (type === 'ROLE_PATIENT') {
+        redirectPath = '/patient'
+      } else if (type === 'ROLE_ADMIN') {
+        redirectPath = '/admin'
+      } else if (type === 'ROLE_MEDECIN') {
+        redirectPath = '/medecin'
+      }
+
+      setTimeout(() => navigate(redirectPath, { replace: true }), 2000)
 
     } catch (error) {
       console.error(error)
       if (error.response) {
-        setGlobalError(error.response.data.error || error.response.data.message || 'Email ou mot de passe incorrect')
+        setGlobalError(
+          error.response.data.error ||
+          error.response.data.message ||
+          'Email ou mot de passe incorrect'
+        )
       } else {
         setGlobalError('Erreur réseau, veuillez réessayer')
       }
@@ -47,7 +65,6 @@ export default function Login() {
     }
   }
 
-  //  effacer erreurs/succès quand l’utilisateur retape
   const handleChange = (setter) => (e) => {
     setter(e.target.value)
     setGlobalError(null)
@@ -61,7 +78,6 @@ export default function Login() {
         <div className="max-w-md mx-auto card">
           <h2 className="h2 text-center">Connexion</h2>
 
-          {/* Bannière d'erreur globale */}
           {globalError && (
             <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3">
               <p className="font-medium text-red-800">Erreur</p>
@@ -69,7 +85,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Bannière de succès */}
           {globalSuccess && (
             <div className="mb-4 rounded-md bg-green-50 border border-green-200 p-3">
               <p className="font-medium text-green-800">Succès</p>
@@ -79,8 +94,8 @@ export default function Login() {
 
           <form onSubmit={onSubmit} className="mt-6 grid gap-3">
             <input
-              value={email}
-              onChange={handleChange(setEmail)}
+              value={emailu}
+              onChange={handleChange(setEmailu)}
               type="email"
               placeholder="Email"
               className="px-4 py-3 rounded-xl border border-zinc-200 bg-white"

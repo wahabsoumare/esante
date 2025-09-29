@@ -13,6 +13,18 @@ import PatientReminders from './pages/patient/Reminders'
 import DoctorProfile from './pages/DoctorProfile'
 import RequireAuth from './components/RequireAuth'
 
+
+// importation pour admin
+
+import AdminLayout from './layouts/AdminLayout'
+import Dashboard  from './pages/adm/Dashboard'
+import GestionUsers  from './pages/adm/GestionUsers'
+import Affichage from './pages/adm/Affichage'
+import PaymentsDashboard from './pages/adm/PaymentsDashboard'
+import SuccessfulConsultationsChart from './components/SuccessfulConsultationsChart'
+import CreateUser from './pages/adm/CreateUser'
+import EditUser  from './pages/adm/EditUser'
+
 export default function App() {
   return (
     <Routes>
@@ -39,7 +51,47 @@ export default function App() {
         <Route path="rappels" element={<PatientReminders />} />
       </Route>
 
+
+
+       {/* Espace admin */}
+     
+      <Route
+        path="/admin"
+        element={
+         
+            <AdminLayout />
+          
+        }
+      >
+
+         <Route index element={
+          <>
+          <Dashboard />
+          <SuccessfulConsultationsChart />
+          </>} />
+         <Route path="users" element={
+          <>
+              <Affichage />
+              <GestionUsers />
+             
+          </>
+         }
+         />
+
+         <Route path = "paiements" element = {<PaymentsDashboard />} />
+         
+         <Route path = "users/create" element = {<CreateUser />} />
+         <Route path="users/edit/:id" element={<EditUser />} />
+       
+
+        
+       
+       
+      </Route>
+
       <Route path="*" element={<Home />} />
+
     </Routes>
+   
   )
 }

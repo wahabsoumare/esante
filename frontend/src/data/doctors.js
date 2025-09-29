@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 export const SPECIALTIES = [
   'Médecine générale','Pédiatrie','Gynécologie','Dermatologie','Cardiologie','Psychologie','ORL','Ophtalmologie','Dentisterie','Diabétologie'
 ]
