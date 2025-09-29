@@ -130,54 +130,6 @@ const deletePatient = async (req, res) => {
   }
 };
 
-const loginPatient = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email et mot de passe requis' });
-    }
-
-    const patient = await Patient.findOne({ where: { email } });
-    if (!patient) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, patient.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Identifiants invalides' });
-    }
-
-    const token = jwt.sign(
-<<<<<<< HEAD
-      { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-=======
-  { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
-  process.env.JWT_SECRET,
-  { expiresIn: '24h' }
-);
->>>>>>> f9782aab274e989495c6f3b5bdab8854974eff80
-
-    const tokenKey = `token:${token}`;
-    await redisClient.setEx(tokenKey, 24 * 60 * 60, patient.id_patient.toString());
-
-    res.json({
-      token,
-      patient: {
-        id_patient: patient.id_patient,
-        email: patient.email,
-        role: patient.role,
-      },
-    });
-  } catch (error) {
-    console.error('Erreur loginPatient:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
-  }
-};
-
 const logoutPatient = async (req, res) => {
   try {
     const token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : req.headers.authorization;
@@ -254,7 +206,6 @@ module.exports = {
   createPatient,
   updatePatient,
   deletePatient,
-  loginPatient,
   logoutPatient,
   getProfile,
   updateProfile,

@@ -15,13 +15,8 @@ export default function Login() {
   const [emailu, setEmailu] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-<<<<<<< HEAD
   const [globalError, setGlobalError] = useState(null)
   const [globalSuccess, setGlobalSuccess] = useState(null)
-=======
-  const [globalError, setGlobalError] = useState(null)   // message d'erreur global
-  const [globalSuccess, setGlobalSuccess] = useState(null) // message succès
->>>>>>> f9782aab274e989495c6f3b5bdab8854974eff80
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -35,14 +30,10 @@ export default function Login() {
         password,
       })
 
-      const { token, patient } = response.data
-
-      localStorage.setItem('token', token)
-
-      login({ patient, token })
+      const userData = response.data
+      login(userData)
 
       setGlobalSuccess('Connexion réussie — redirection en cours...')
-<<<<<<< HEAD
 
       // 🔀 redirection dynamique selon le type de compte
       let redirectPath = from
@@ -57,9 +48,6 @@ export default function Login() {
       }
 
       setTimeout(() => navigate(redirectPath, { replace: true }), 2000)
-=======
-      setTimeout(() => navigate(from, { replace: true }), 2000)
->>>>>>> f9782aab274e989495c6f3b5bdab8854974eff80
 
     } catch (error) {
       console.error(error)

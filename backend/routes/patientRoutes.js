@@ -6,14 +6,12 @@ const {
   createPatient,
   updatePatient,
   deletePatient,
-  loginPatient,
   logoutPatient,
   getProfile,
   updateProfile,
 } = require('../controllers/patientController');
 const { authMiddleware, restrictToRoles } = require('../middleware/patientAuth');
 
-router.post('/login', loginPatient);
 router.post('/logout', authMiddleware, logoutPatient);
 router.get('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), getProfile);
 router.put('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), updateProfile);
