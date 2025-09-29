@@ -11,17 +11,11 @@ export default function Login() {
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
 
-  //  backend attend "emailu"
   const [emailu, setEmailu] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-<<<<<<< HEAD
   const [globalError, setGlobalError] = useState(null)
   const [globalSuccess, setGlobalSuccess] = useState(null)
-=======
-  const [globalError, setGlobalError] = useState(null)   // message d'erreur global
-  const [globalSuccess, setGlobalSuccess] = useState(null) // message succès
->>>>>>> f9782aab274e989495c6f3b5bdab8854974eff80
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -31,23 +25,34 @@ export default function Login() {
 
     try {
       const response = await axios.post('http://localhost:3000/api/utilisateurs/login', {
-        emailu,   // correspond au backend
+        emailu,
         password,
       })
 
-      const { token, patient } = response.data
+      // ATTENTION ici selon ton backend, la structure peut être "user" ou "patient"
+      const { token, user, patient } = response.data
 
+      if (!token) {
+        throw new Error('Jeton manquant dans la réponse')
+      }
+
+      // Stockage du token
       localStorage.setItem('token', token)
 
-      login({ patient, token })
+      // Appel de la fonction login de ton contexte
+      // Tu peux passer soit patient soit user selon la réponse reçue
+      login({ patient: patient || null, user: user || null, token })
 
       setGlobalSuccess('Connexion réussie — redirection en cours...')
-<<<<<<< HEAD
 
-      // 🔀 redirection dynamique selon le type de compte
+      // Définir le type à partir de user ou patient
+      const type =
+        (patient && patient.typecompte) ||
+        (patient && patient.role) ||
+        (user && user.typecompte) ||
+        (user && user.role)
+
       let redirectPath = from
-      const type = userData?.user?.typecompte || userData?.user?.role
-
       if (type === 'ROLE_PATIENT') {
         redirectPath = '/patient'
       } else if (type === 'ROLE_ADMIN') {
@@ -56,13 +61,10 @@ export default function Login() {
         redirectPath = '/medecin'
       }
 
+      // Redirection après 2 secondes
       setTimeout(() => navigate(redirectPath, { replace: true }), 2000)
-=======
-      setTimeout(() => navigate(from, { replace: true }), 2000)
->>>>>>> f9782aab274e989495c6f3b5bdab8854974eff80
-
     } catch (error) {
-      console.error(error)
+      console.error('Erreur lors de la connexion:', error)
       if (error.response) {
         setGlobalError(
           error.response.data.error ||
@@ -70,7 +72,7 @@ export default function Login() {
           'Email ou mot de passe incorrect'
         )
       } else {
-        setGlobalError('Erreur réseau, veuillez réessayer')
+        setGlobalError(error.message || 'Erreur réseau, veuillez réessayer')
       }
     } finally {
       setLoading(false)
@@ -112,6 +114,7 @@ export default function Login() {
               placeholder="Email"
               className="px-4 py-3 rounded-xl border border-zinc-200 bg-white"
               required
+              autoComplete="username"
             />
             <input
               value={password}
@@ -120,6 +123,7 @@ export default function Login() {
               placeholder="Mot de passe"
               className="px-4 py-3 rounded-xl border border-zinc-200 bg-white"
               required
+              autoComplete="current-password"
             />
             <button
               type="submit"
