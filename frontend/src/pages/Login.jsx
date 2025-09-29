@@ -14,8 +14,8 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [globalError, setGlobalError] = useState(null)   //  message d'erreur global
-  const [globalSuccess, setGlobalSuccess] = useState(null) //  message succès
+  const [globalError, setGlobalError] = useState(null)   // message d'erreur global
+  const [globalSuccess, setGlobalSuccess] = useState(null) // message succès
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -29,16 +29,23 @@ export default function Login() {
         password
       })
 
-      const userData = response.data
-      login(userData)
+      const { token, patient } = response.data
+
+      localStorage.setItem('token', token)
+
+      login({ patient, token })
 
       setGlobalSuccess('Connexion réussie — redirection en cours...')
-      setTimeout(() => navigate(from, { replace: true }), 2000) //  navigation propre
+      setTimeout(() => navigate(from, { replace: true }), 2000)
 
     } catch (error) {
       console.error(error)
       if (error.response) {
-        setGlobalError(error.response.data.error || error.response.data.message || 'Email ou mot de passe incorrect')
+        setGlobalError(
+          error.response.data.error ||
+          error.response.data.message ||
+          'Email ou mot de passe incorrect'
+        )
       } else {
         setGlobalError('Erreur réseau, veuillez réessayer')
       }
@@ -47,7 +54,6 @@ export default function Login() {
     }
   }
 
-  //  effacer erreurs/succès quand l’utilisateur retape
   const handleChange = (setter) => (e) => {
     setter(e.target.value)
     setGlobalError(null)

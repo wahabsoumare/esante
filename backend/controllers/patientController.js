@@ -149,10 +149,10 @@ const loginPatient = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id_patient: patient.id_patient, email: patient.email, role: patient.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+  { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
+  process.env.JWT_SECRET,
+  { expiresIn: '24h' }
+);
 
     const tokenKey = `token:${token}`;
     await redisClient.setEx(tokenKey, 24 * 60 * 60, patient.id_patient.toString());
