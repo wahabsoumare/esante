@@ -59,7 +59,7 @@ const createPatient = async (req, res) => {
       commune,
       personne_urgence,
       langue_pref: langue_pref || 'fr',
-      role: 'patient',
+      typecompte: 'ROLE_PATIENT',
       cree_le: new Date(),
     });
 

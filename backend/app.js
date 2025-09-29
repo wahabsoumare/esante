@@ -4,10 +4,11 @@ const helmet = require('helmet');
 const cors = require('cors'); 
 const path = require('path');
 
-const disponibiliteRoutes = require('./routes/disponibiliteRoutes')
 const etablissementRoutes = require('./routes/etablissementRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const utilisateurRoutes = require('./routes/utilisateurRoutes');
+const disponibiliteRoutes = require('./routes/disponibiliteRoutes')
+const rendezvousRoutes = require('./routes/rendezvousRoutes');
 const sequelize = require('./config/connexion');
 const redisClient = require('./config/redis');
 const swaggerUi = require('swagger-ui-express');
@@ -60,6 +61,7 @@ app.use('/api/disponibilites', disponibiliteRoutes);
 app.use('/api/etablissements', etablissementRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/utilisateurs', utilisateurRoutes);
+app.use('/api/rendezvous', rendezvousRoutes);
 
 // Gestion 404
 app.use((req, res, next) => {

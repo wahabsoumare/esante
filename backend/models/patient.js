@@ -71,12 +71,12 @@ const Patient = sequelize.define(
       allowNull: false,
       defaultValue: 'fr',
     },
-    role: {
+    typecompte: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: 'patient',
+      defaultValue: 'ROLE_PATIENT',
       validate: {
-        isIn: [['patient']],
+        isIn: [['ROLE_PATIENT']],
       },
     },
     metriques: {

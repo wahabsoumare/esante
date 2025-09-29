@@ -15,11 +15,11 @@ const { authMiddleware, restrictToRoles } = require('../middleware/patientAuth')
 
 router.post('/login', loginPatient);
 router.post('/logout', authMiddleware, logoutPatient);
-router.get('/profile', authMiddleware, restrictToRoles('patient'), getProfile);
-router.put('/profile', authMiddleware, restrictToRoles('patient'), updateProfile);
+router.get('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), getProfile);
+router.put('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), updateProfile);
 
-router.get('/', authMiddleware, restrictToRoles('ROLE_ADMIN'), getAllPatients);
-router.get('/:id', authMiddleware, restrictToRoles('patient'), getPatientById);
+router.get('/', authMiddleware, getAllPatients);
+router.get('/:id', authMiddleware, restrictToRoles('ROLE_PATIENT'), getPatientById);
 router.post('/', createPatient);
 router.put('/:id', authMiddleware, restrictToRoles('ROLE_ADMIN'), updatePatient);
 router.delete('/:id', authMiddleware, restrictToRoles('ROLE_ADMIN'), deletePatient);
