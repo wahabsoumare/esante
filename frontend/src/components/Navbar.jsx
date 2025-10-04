@@ -25,6 +25,56 @@ export default function Navbar() {
       </span>
     </NavLink>
   )
+  
+  // Robust dashboard path resolver
+  const getDashboardPath = () => {
+    if (!user) return '/connexion'
+    const roleRaw = user.role || user.typecompte || ''
+
+    // If role is missing, try to decode the JWT token payload to infer role
+    const decodeJwt = (token) => {
+      if (!token) return null
+      try {
+        const parts = token.split('.')
+        if (parts.length < 2) return null
+        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+        // pad base64 string
+        while (base64.length % 4) base64 += '='
+        const json = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        }).join(''))
+        return JSON.parse(json)
+      } catch (e) {
+        return null
+      }
+    }
+    // Normalize to array of upper-case tokens for flexible matching
+    let roles = Array.isArray(roleRaw)
+      ? roleRaw.map(r => String(r).toUpperCase())
+      : String(roleRaw).split(/[ ,|;]+/).map(r => r.toUpperCase())
+
+    if ((!roles || roles.length === 0 || (roles.length === 1 && roles[0] === '')) && (user?.token || localStorage.getItem('token'))) {
+      const token = user?.token || localStorage.getItem('token')
+      const payload = decodeJwt(token)
+      if (payload) {
+        const tokenRole = payload.role || payload.type || payload.typecompte || payload.roles || payload.userRole
+        if (tokenRole) {
+          roles = Array.isArray(tokenRole) ? tokenRole.map(r => String(r).toUpperCase()) : String(tokenRole).split(/[ ,|;]+/).map(r => r.toUpperCase())
+        }
+        // Some tokens might include a medecin flag or similar
+        if (!roles.some(Boolean) && (payload.medecin || payload.isMedecin || payload.is_doctor)) {
+          roles = ['MEDECIN']
+        }
+      }
+    }
+
+  const isDoctor = roles.some(r => r.includes('MEDECIN') || r.includes('DOCTOR') || r.includes('MEDIC')) || Boolean(user?.medecin)
+  const isAdmin = roles.some(r => r.includes('ADMIN')) || (typeof user?.typecompte === 'string' && user.typecompte.toUpperCase().includes('ADMIN'))
+
+    if (isDoctor) return '/doctor'
+    if (isAdmin) return '/admin'
+    return '/patient'
+  }
   const handleLogout = async () => {
     try {
       await logout()
@@ -33,6 +83,8 @@ export default function Navbar() {
     }
     navigate('/connexion')
   }
+
+  // (debug badge removed)
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-zinc-100">
@@ -48,12 +100,12 @@ export default function Navbar() {
           {!user && item('/inscription', 'Inscription', faUserPlus)}
           {user && (
             <>
-              {/* determine dashboard path by role if possible */}
-              {item(user?.typecompte?.includes('MEDECIN') || user?.role?.toString().includes('MEDECIN') ? '/doctor' : (user?.typecompte?.includes('ADMIN') || user?.role?.toString().includes('ADMIN') ? '/admin' : '/patient'), 'Tableau de bord', faNewspaper)}
+              {item(getDashboardPath(), 'Tableau de bord', faNewspaper)}
               <button onClick={handleLogout} className="px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50">Se déconnecter</button>
             </>
           )}
         </nav>
+        
         <button className="md:hidden btn-outline" onClick={()=>setOpen(v=>!v)}>Menu</button>
       </div>
       {open && (
@@ -64,7 +116,7 @@ export default function Navbar() {
             {item('/rendez-vous', 'Rendez-vous', faCalendarCheck)}
             {!user && item('/connexion', 'Connexion', faRightToBracket)}
             {!user && item('/inscription', 'Inscription', faUserPlus)}
-            {user && item(user?.typecompte?.includes('MEDECIN') || user?.role?.toString().includes('MEDECIN') ? '/doctor' : (user?.typecompte?.includes('ADMIN') || user?.role?.toString().includes('ADMIN') ? '/admin' : '/patient'), 'Tableau de bord', faNewspaper)}
+            {user && item(getDashboardPath(), 'Tableau de bord', faNewspaper)}
             {user && <button onClick={handleLogout} className="px-3 py-2 rounded-lg text-sm text-red-600">Se déconnecter</button>}
           </div>
         </div>

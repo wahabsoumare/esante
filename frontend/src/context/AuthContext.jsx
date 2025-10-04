@@ -15,9 +15,36 @@ export function AuthProvider({ children }) {
       try {
         const userData = JSON.parse(savedUser)
         setUser(userData)
-        
+
         if (userData.token) {
           localStorage.setItem('token', userData.token)
+        }
+
+        // If token exists but user object seems incomplete (e.g. only token), fetch profile
+        const needsProfile = !userData.role || !userData.firstname || !userData.lastname
+        if (userData.token && needsProfile) {
+          (async () => {
+            try {
+              const res = await api.get('/api/utilisateurs/profile')
+              const full = res.data
+              const merged = {
+                id: full.id,
+                email: full.email,
+                role: full.role,
+                firstname: full.firstname || full.prenom || full.prenomu || '',
+                lastname: full.lastname || full.nom || full.nomu || '',
+                phone: full.phone || full.telephone || full.telephonenu || '',
+                token: userData.token,
+                // keep any medecin object if present
+                medecin: full.medecin || userData.medecin
+              }
+              setUser(merged)
+              localStorage.setItem('user', JSON.stringify(merged))
+            } catch (err) {
+              // Could not fetch profile; keep existing minimal user
+              console.error('Could not fetch full user profile on startup:', err)
+            }
+          })()
         }
       } catch (error) {
         console.error('Error parsing saved user:', error)
