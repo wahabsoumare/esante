@@ -57,8 +57,8 @@ const createUtilisateur = async (req, res) => {
       return res.status(400).json({ error: 'Tous les champs obligatoires doivent être remplis' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    // Do NOT hash the password here. The Utilisateur model has hooks
+    // (beforeCreate/beforeUpdate) that will hash the password exactly once.
     const newUtilisateur = await Utilisateur.create(
       {
         prenomu,
@@ -68,7 +68,7 @@ const createUtilisateur = async (req, res) => {
         telephoneu,
         emailu,
         fonction,
-        password: hashedPassword,
+        password, // plain password -> hashed by model hook
         etat,
         typecompte,
         dateajout: new Date(),
@@ -136,7 +136,8 @@ const updateUtilisateur = async (req, res) => {
     };
 
     if (password) {
-      updates.password = await bcrypt.hash(password, 10);
+      // Assign plain password so model's beforeUpdate hook hashes it once
+      updates.password = password;
     }
 
     await utilisateur.update(updates, { transaction: t });
@@ -321,7 +322,8 @@ const updateProfile = async (req, res) => {
     };
 
     if (password) {
-      updates.password = await bcrypt.hash(password, 10);
+      // Assign plain password so model's beforeUpdate hook hashes it once
+      updates.password = password;
     }
 
     await utilisateur.update(updates, { transaction: t });
