@@ -44,7 +44,7 @@ export default function Login() {
       } else if (type === 'ROLE_ADMIN') {
         redirectPath = '/admin'
       } else if (type === 'ROLE_MEDECIN') {
-        redirectPath = '/medecin'
+        redirectPath = '/doctor'
       }
 
       setTimeout(() => navigate(redirectPath, { replace: true }), 2000)
