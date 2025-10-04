@@ -30,8 +30,8 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-1">
           {item('/', 'Accueil', faNewspaper)}
           {item('/recherche', 'Recherche', faMagnifyingGlass)}
-          {item('/recherche', 'Événements', faNewspaper)}
-          {item('/', 'Ressources', faBook)}
+          {/* {item('/recherche', 'Événements', faNewspaper)} */}
+          {/* {item('/', 'Ressources', faBook)} */}
           {item('/rendez-vous', 'Rendez-vous', faCalendarCheck)}
           {item('/connexion', 'Connexion', faRightToBracket)}
           {item('/inscription', 'Inscription', faUserPlus)}
@@ -43,8 +43,8 @@ export default function Navbar() {
           <div className="max-w-7xl mx-auto px-4 py-2 grid gap-1">
             {item('/', 'Accueil', faNewspaper)}
             {item('/recherche', 'Recherche', faMagnifyingGlass)}
-            {item('/recherche', 'Événements', faNewspaper)}
-            {item('/', 'Ressources', faBook)}
+            {/* {item('/recherche', 'Événements', faNewspaper)} */}
+            {/* {item('/', 'Ressources', faBook)} */}
             {item('/rendez-vous', 'Rendez-vous', faCalendarCheck)}
             {item('/connexion', 'Connexion', faRightToBracket)}
             {item('/inscription', 'Inscription', faUserPlus)}

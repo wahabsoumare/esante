@@ -9,12 +9,14 @@ const {
   logoutPatient,
   getProfile,
   updateProfile,
+  addMetrique,
 } = require('../controllers/patientController');
 const { authMiddleware, restrictToRoles } = require('../middleware/patientAuth');
 
 router.post('/logout', authMiddleware, logoutPatient);
 router.get('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), getProfile);
 router.put('/profile', authMiddleware, restrictToRoles('ROLE_PATIENT'), updateProfile);
+router.post('/profile/metriques', authMiddleware, restrictToRoles('ROLE_PATIENT'), addMetrique);
 
 router.get('/', authMiddleware, getAllPatients);
 router.get('/:id', authMiddleware, restrictToRoles('ROLE_PATIENT'), getPatientById);

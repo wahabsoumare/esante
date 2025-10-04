@@ -200,6 +200,50 @@ const updateProfile = async (req, res) => {
   }
 };
 
+
+// Ajouter une métrique pour le patient connecté
+const addMetrique = async (req, res) => {
+  try {
+    const { type, value, date } = req.body;
+
+    if (!type || value === undefined) {
+      return res.status(400).json({ error: 'Type et valeur de la métrique requis' });
+    }
+
+    const patient = await Patient.findByPk(req.user.id_patient);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient non trouvé' });
+    }
+
+    // Ensure metriques is an object with arrays per type
+    const current = patient.metriques && typeof patient.metriques === 'object' ? patient.metriques : {};
+
+    // Deep copy to avoid any mutation side-effects
+    const newMetriques = JSON.parse(JSON.stringify(current));
+    if (!Array.isArray(newMetriques[type])) newMetriques[type] = [];
+
+    const entry = {
+      value,
+      date: date || new Date().toISOString(),
+    };
+
+    newMetriques[type].push(entry);
+
+    // Save using instance.set + save to ensure hooks/serializers run correctly
+    patient.set('metriques', newMetriques);
+    await patient.save();
+
+    // Re-fetch fresh row directly from DB to ensure we return persisted value
+    const fresh = await Patient.findByPk(patient.id_patient);
+    console.log(`addMetrique: patient ${patient.id_patient} metriques after save:`, fresh.metriques);
+
+    res.status(201).json({ message: 'Métrique ajoutée', metriques: fresh.metriques });
+  } catch (error) {
+    console.error('Erreur addMetrique:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+};
+
 module.exports = {
   getAllPatients,
   getPatientById,
@@ -209,4 +253,5 @@ module.exports = {
   logoutPatient,
   getProfile,
   updateProfile,
+  addMetrique,
 };
