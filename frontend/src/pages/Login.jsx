@@ -47,7 +47,7 @@ export default function Login() {
         redirectPath = '/doctor'
       }
 
-      setTimeout(() => navigate(redirectPath, { replace: true }), 2000)
+      setTimeout(() => navigate(redirectPath, { replace: true }), 500)
 
     } catch (error) {
       console.error(error)

@@ -1,5 +1,6 @@
 // context/AuthContext.jsx
 import { createContext, useState, useContext, useEffect } from 'react'
+import api from '../config/axios'
 
 const AuthContext = createContext()
 
@@ -54,8 +55,21 @@ export function AuthProvider({ children }) {
   }
 
   // 🚪 FONCTION LOGOUT
-  const logout = () => {
+  // Calls server logout endpoints (if available) and then clears local auth state
+  const logout = async () => {
     console.log('Logout called')
+    try {
+      // attempt to invalidate token on both possible endpoints
+      await api.post('/api/utilisateurs/logout')
+    } catch (e) {
+      // ignore server errors - may not exist for this role
+    }
+    try {
+      await api.post('/api/patients/logout')
+    } catch (e) {
+      // ignore
+    }
+
     setUser(null)
     localStorage.removeItem('user')
     localStorage.removeItem('token')

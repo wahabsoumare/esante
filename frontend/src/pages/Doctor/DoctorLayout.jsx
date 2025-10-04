@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from '../../config/axios';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserDoctor, faHouse, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
@@ -83,9 +83,13 @@ const DoctorLayout = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Error during logout', err);
+    }
+    navigate('/connexion');
   };
 
   useEffect(() => {
@@ -98,9 +102,7 @@ const DoctorLayout = () => {
           return;
         }
 
-        const response = await axios.get("http://localhost:3000/api/utilisateurs/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get('/api/utilisateurs/profile');
 
         setDoctor(response.data);
       } catch (error) {
