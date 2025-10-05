@@ -3,7 +3,7 @@ import Footer from '../components/Footer'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../config/axios'
 
 export default function Login() {
   const { login } = useAuth()
@@ -25,7 +25,7 @@ export default function Login() {
     setGlobalSuccess(null)
 
     try {
-      const response = await axios.post('http://localhost:3000/api/utilisateurs/login', {
+      const response = await api.post('/api/utilisateurs/login', {
         emailu,   // correspond au backend
         password,
       })

@@ -23,6 +23,8 @@ import DashboardOverview from './pages/Doctor/DashboardOverview'
 import AppointmentsView from './pages/Doctor/AppointmentsView'
 import PatientsList from './pages/Doctor/PatientsList'
 import MedecinProfile from './pages/Doctor/DoctorProfile'
+import MedecinProfileEdit from './pages/Doctor/DoctorProfileEdit'
+import MedecinChangePassword from './pages/Doctor/DoctorChangePassword'
 import DisponibilitiesPage from './pages/Doctor/DisponibilitiesPage'
 
 // --- Admin ---
@@ -87,6 +89,8 @@ export default function App() {
         <Route path="patients" element={<PatientsList />} />
   <Route path="disponibilites" element={<DisponibilitiesPage />} />
         <Route path="profile" element={<MedecinProfile />} />
+  <Route path="profile/edit" element={<MedecinProfileEdit />} />
+  <Route path="profile/change-password" element={<MedecinChangePassword />} />
       </Route>
 
       {/* ---------------------- */}

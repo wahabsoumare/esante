@@ -9,7 +9,7 @@ export default function PatientIndicators() {
   const [type, setType] = useState('')
   const [value, setValue] = useState('')
   const [date, setDate] = useState('')
-  const BASE_URL = 'http://localhost:3000'
+  // use api instance with configured baseURL
 
   useEffect(() => {
     const fetchProfile = async () => {

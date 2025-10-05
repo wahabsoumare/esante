@@ -1,88 +1,268 @@
-// src/pages/Doctor/AppointmentsView.jsx
-
 import React, { useState, useEffect } from 'react';
+import api from '../../config/axios';
 
-// Données statiques (Simule la réponse de GET /api/appointments/doctor)
-const mockAppointments = [
-  { id: 1, patient: 'Marie Kant', date: '29/09/2025', time: '14:00', duration: '30min', motif: 'Consultation annuelle', status: 'Confirmé' },
-  { id: 2, patient: 'Jean Traoré', date: '29/09/2025', time: '15:30', duration: '45min', motif: 'Suivi cardiaque', status: 'En attente' },
-  { id: 3, patient: 'Fatou Sarr', date: '30/09/2025', time: '09:00', duration: '30min', motif: 'Contrôle tension', status: 'Confirmé' },
-  { id: 4, patient: 'Ibrahima Fall', date: '01/10/2025', time: '11:00', duration: '60min', motif: 'Nouveau patient', status: 'Annulé' },
-];
-
-// Helper function pour déterminer la couleur du statut
+// ✅ Style selon le statut
 const getStatusClasses = (status) => {
-    switch (status) {
-        case 'Confirmé':
-            return 'bg-green-100 text-green-800';
-        case 'En attente':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'Annulé':
-            return 'bg-red-100 text-red-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
+  switch (status) {
+    case 'CONFIRMED':
+      return 'bg-green-100 text-green-800';
+    case 'PENDING':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800';
+    case 'CANCELLED':
+      return 'bg-gray-200 text-gray-600';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+// ✅ Styles des boutons
+const buttonStyles = {
+  confirm: 'bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded transition',
+  reject: 'bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded transition',
+  cancel: 'bg-gray-400 hover:bg-gray-500 text-white font-semibold px-3 py-1 rounded transition',
+  delete: 'bg-black hover:bg-gray-800 text-white font-semibold px-3 py-1 rounded transition',
 };
 
 export default function AppointmentsView() {
-    const [appointments, setAppointments] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterDate, setFilterDate] = useState('');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
 
-    useEffect(() => {
-        // --- Étape d'intégration API ---
-        // Ici, vous ferez l'appel à votre API : GET /api/appointments/doctor
-        
-        setTimeout(() => {
-            setAppointments(mockAppointments);
-            setLoading(false);
-        }, 300);
-    }, []);
+  // 🔹 Charger les rendez-vous
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await api.get('/api/rendezvous/medecin/me');
+        setAppointments(res.data || []);
+      } catch (err) {
+        console.error('Erreur récupération RDV:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
 
-    if (loading) {
-        return <h2 className="text-xl font-semibold">Chargement des rendez-vous...</h2>;
+  // 🔹 Filtrage
+  const filteredAppointments = appointments.filter((appt) => {
+    const matchStatus =
+      filterStatus === 'ALL' ? true : appt.statut === filterStatus;
+    const matchDate = filterDate
+      ? appt.dateRdv.startsWith(filterDate)
+      : true; // compare juste la date YYYY-MM-DD
+    return matchStatus && matchDate;
+  });
+
+  // 🔹 Pagination
+  const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const paginated = filteredAppointments.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // 🔹 Mettre la page à 1 si filtres changent
+  useEffect(() => {
+    setPage(1);
+  }, [filterStatus, filterDate]);
+
+  // 🔹 Action sur un rendez-vous
+  const handleAction = async (id, action) => {
+    try {
+      let url = '';
+      let body = {};
+
+      if (action === 'confirm') url = `/api/rendezvous/${id}/confirm`;
+      else if (action === 'reject') {
+        const reason = prompt('Motif du rejet :');
+        if (!reason) return;
+        url = `/api/rendezvous/${id}/reject`;
+        body = { reason };
+      } else if (action === 'cancel') url = `/api/rendezvous/${id}/cancel`;
+      else if (action === 'delete') {
+        if (!window.confirm('Supprimer ce rendez-vous ?')) return;
+        setAppointments((prev) => prev.filter((a) => a.id !== id));
+        return;
+      }
+
+      const res = await api.patch(url, body);
+
+      // 🔹 Mettre à jour le statut automatiquement dans l'état
+      const updatedStatut = res.data?.rendezvous?.statut;
+      if (updatedStatut) {
+        setAppointments((prev) =>
+          prev.map((a) =>
+            a.id === id ? { ...a, statut: updatedStatut } : a
+          )
+        );
+      }
+
+      alert(res.data.message || 'Action réussie ✅');
+    } catch (err) {
+      console.error('Erreur action:', err);
+      alert(err.response?.data?.message || "Erreur lors de l'action ❌");
     }
+  };
 
-    return (
-        <div>
-            <h1 className="text-3xl font-bold mb-8 text-gray-800">📅 Mes Rendez-vous</h1>
-            
-            {/* Filtres de la vue (à implémenter plus tard) */}
-            <div className="flex space-x-4 mb-6">
-                <button className="bg-green-600 text-white px-4 py-2 rounded-lg">Aujourd'hui</button>
-                <button className="bg-white border text-gray-700 px-4 py-2 rounded-lg">Cette semaine</button>
-                <button className="bg-white border text-gray-700 px-4 py-2 rounded-lg">Tous</button>
-            </div>
+  if (loading) {
+    return <h2 className="text-xl font-semibold">Chargement des rendez-vous...</h2>;
+  }
 
-            <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Heure</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Motif</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                            <th className="px-6 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {appointments.map((appt) => (
-                            <tr key={appt.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{appt.date} à {appt.time} ({appt.duration})</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{appt.patient}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{appt.motif}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(appt.status)}`}>
-                                        {appt.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button className="text-indigo-600 hover:text-indigo-900">Gérer</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">📅 Mes Rendez-vous</h1>
+
+      {/* 🔍 Filtres */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border rounded-lg px-3 py-2"
+        >
+          <option value="ALL">Tous les statuts</option>
+          <option value="PENDING">En attente</option>
+          <option value="CONFIRMED">Confirmé</option>
+          <option value="REJECTED">Rejeté</option>
+          <option value="CANCELLED">Annulé</option>
+        </select>
+
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="border rounded-lg px-3 py-2"
+        />
+
+        <button
+          onClick={() => {
+            setFilterDate('');
+            setFilterStatus('ALL');
+          }}
+          className="bg-gray-100 border px-4 py-2 rounded-lg hover:bg-gray-200 transition"
+        >
+          Réinitialiser
+        </button>
+      </div>
+
+      {/* 📋 Tableau */}
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date & Heure
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Patient
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th className="px-6 py-3"></th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {paginated.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="text-center py-6 text-gray-500">
+                  Aucun rendez-vous trouvé.
+                </td>
+              </tr>
+            ) : (
+              paginated.map((appt) => (
+                <tr key={appt.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {appt.dateRdv} <br />
+                    <span className="text-gray-500">
+                      {appt.heureDebut} - {appt.heureFin}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    {appt.patient
+                      ? `${appt.patient.prenom} ${appt.patient.nom}`
+                      : '—'}
+                    <br />
+                    <span className="text-gray-500 text-xs">
+                      {appt.patient?.email}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClasses(
+                        appt.statut
+                      )}`}
+                    >
+                      {appt.statut}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end">
+                    {appt.statut === 'PENDING' && (
+                      <>
+                        <button
+                          onClick={() => handleAction(appt.id, 'confirm')}
+                          className={buttonStyles.confirm}
+                        >
+                          Confirmer
+                        </button>
+                        <button
+                          onClick={() => handleAction(appt.id, 'reject')}
+                          className={buttonStyles.reject}
+                        >
+                          Rejeter
+                        </button>
+                      </>
+                    )}
+                    {['CONFIRMED', 'REJECTED', 'CANCELLED'].includes(
+                      appt.statut
+                    ) && (
+                      <button
+                        onClick={() => handleAction(appt.id, 'cancel')}
+                        className={buttonStyles.cancel}
+                      >
+                        Annuler
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleAction(appt.id, 'delete')}
+                      className={buttonStyles.delete}
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 📄 Pagination */}
+      {filteredAppointments.length > itemsPerPage && (
+        <div className="flex justify-center items-center mt-6 space-x-3">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            ⬅ Précédent
+          </button>
+          <span>
+            Page {page} / {totalPages}
+          </span>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Suivant ➡
+          </button>
         </div>
-    );
+      )}
+    </div>
+  );
 }

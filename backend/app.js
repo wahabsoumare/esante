@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Activer CORS (autoriser le frontend)
 app.use(cors({
   origin: '*', // Autoriser seulement le frontend
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Annee-Id'],
   credentials: true,
 }));

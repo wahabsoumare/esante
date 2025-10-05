@@ -2,7 +2,7 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import DoctorCard from '../components/DoctorCard'
-import axios from 'axios'
+import api from '../config/axios'
 import { useMemo, useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'  // ✅ import du contexte
 
@@ -16,7 +16,7 @@ export default function Search() {
   const [error, setError] = useState(null)
 
   // Endpoint public ou protégé selon ton backend
-  const API_MEDICIANS = 'http://localhost:3000/api/utilisateurs/public/medecins'
+  const API_MEDICIANS = '/api/utilisateurs/public/medecins'
 
   useEffect(() => {
     let mounted = true
@@ -25,9 +25,7 @@ export default function Search() {
       setLoading(true)
       try {
         // ✅ ajout du token dans les headers
-        const res = await axios.get(API_MEDICIANS, {
-          headers: { Authorization: `Bearer ${getToken() || ''}` }
-        })
+        const res = await api.get(API_MEDICIANS)
         if (!mounted) return
 
         setDoctors(res.data || [])

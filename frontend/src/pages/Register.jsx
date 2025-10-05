@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../config/axios'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useNavigate } from 'react-router-dom' //React Router
@@ -85,7 +85,7 @@ export default function Register() {
         langue_pref: form.languePref
       }
 
-      const response = await axios.post('http://localhost:3000/api/patients/', payload)
+  const response = await api.post('/api/patients/', payload)
 
       // Succès : afficher message et rediriger proprement
       setGlobalSuccess('Inscription réussie — vous allez être redirigé vers la page de connexion')

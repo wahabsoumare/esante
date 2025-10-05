@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import axios from 'axios'
+import api from '../config/axios'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLocationDot, faStethoscope, faCircleCheck, faLanguage, faMoneyBill } from '@fortawesome/free-solid-svg-icons'
 import { useAuth } from '../context/AuthContext'  // ✅ import du contexte
@@ -23,30 +23,18 @@ export default function DoctorProfile() {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
 
-  // Création d'un header Axios avec token
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${getToken() || ''}`
-    }
-  }
 
   useEffect(() => {
     const fetch = async () => {
       try {
         setLoading(true)
         // Endpoint getDisponibilitesByMedecin avec token
-        const dispoRes = await axios.get(
-          `http://localhost:3000/api/disponibilites/medecin/${id}`,
-          axiosConfig
-        )
+        const dispoRes = await api.get(`/api/disponibilites/medecin/${id}`)
         setDoc(dispoRes.data.medecin)
         setDispos(dispoRes.data.disponibilites || [])
 
         // RDV confirmés pour bloquer les créneaux
-        const rdvRes = await axios.get(
-          `http://localhost:3000/api/rendezvous/medecin/${id}`,
-          axiosConfig
-        )
+        const rdvRes = await api.get(`/api/rendezvous/medecin/${id}`)
         setRdvs(rdvRes.data || [])
       } catch (err) {
         console.error(err)
@@ -96,18 +84,14 @@ export default function DoctorProfile() {
       return
     }
     try {
-      const res = await axios.post(
-        'http://localhost:3000/api/rendezvous',
-        {
-          medecinId: doc.id,
-          disponibiliteId: selectedDispo.id,
-          dateRdv: selectedDate,
-          heureDebut: selectedDispo.heureDebut,
-          heureFin: selectedDispo.heureFin,
-          notes
-        },
-        axiosConfig // ✅ token inclus dans la requête POST
-      )
+      const res = await api.post('/api/rendezvous', {
+        medecinId: doc.id,
+        disponibiliteId: selectedDispo.id,
+        dateRdv: selectedDate,
+        heureDebut: selectedDispo.heureDebut,
+        heureFin: selectedDispo.heureFin,
+        notes
+      })
       setMessage('Rendez-vous créé — en attente de confirmation.')
       setRdvs(prev => [...prev, res.data])
       setSelectedDate('')

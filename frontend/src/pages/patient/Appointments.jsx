@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../config/axios'
 
 export default function PatientAppointments() {
   const { getToken } = useAuth()
@@ -23,11 +24,8 @@ export default function PatientAppointments() {
   const fetchAppointments = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/api/rendezvous/patient/me', {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      })
-      if (!res.ok) throw new Error('Erreur récupération des rendez-vous')
-      const data = await res.json()
+      const res = await api.get('/api/rendezvous/patient/me')
+      const data = res.data || []
 
       const now = new Date()
       const upcomingList = []
@@ -57,11 +55,8 @@ export default function PatientAppointments() {
 
   const fetchMedecins = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/utilisateurs/public/medecins', {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      })
-      if (!res.ok) throw new Error('Erreur récupération des médecins')
-      const data = await res.json()
+      const res = await api.get('/api/utilisateurs/public/medecins')
+      const data = res.data || []
       setMedecins(data)
     } catch (err) {
       setError(err.message)
@@ -70,11 +65,8 @@ export default function PatientAppointments() {
 
   const fetchDispos = async (medecinId) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/disponibilites/medecin/${medecinId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      })
-      if (!res.ok) throw new Error('Erreur récupération disponibilités')
-      const data = await res.json()
+      const res = await api.get(`/api/disponibilites/medecin/${medecinId}`)
+      const data = res.data
       setDispos(data.disponibilites)
     } catch (err) {
       setError(err.message)
@@ -120,17 +112,9 @@ export default function PatientAppointments() {
     e.preventDefault()
     setError(null)
     try {
-      const res = await fetch('http://localhost:3000/api/rendezvous', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
-        },
-        body: JSON.stringify(form)
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Erreur création rendez-vous')
+      const res = await api.post('/api/rendezvous', form)
+      if (!res || res.status >= 400) {
+        throw new Error(res?.data?.message || 'Erreur création rendez-vous')
       }
       await fetchAppointments()
       setForm({
