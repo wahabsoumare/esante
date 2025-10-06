@@ -1,8 +1,8 @@
 const Disponibilite = require('../models/disponibilite');
 const Medecin = require('../models/medecin');
-const Utilisateur = require('../models/utilisateur'); // pour récupérer nom/prénom
+const Utilisateur = require('../models/utilisateur');
 
-// 1. Créer une disponibilité
+// 1️⃣ Créer une disponibilité
 const createDisponibilite = async (req, res) => {
   try {
     const utilisateurId = req.user.idu;
@@ -11,15 +11,17 @@ const createDisponibilite = async (req, res) => {
     }
 
     const medecin = await Medecin.findOne({ where: { utilisateurId } });
-    if (!medecin) {
-      return res.status(404).json({ message: "Médecin non trouvé." });
-    }
+    if (!medecin) return res.status(404).json({ message: "Médecin non trouvé." });
 
     const { jour, heureDebut, heureFin } = req.body;
 
+    if (!jour || !heureDebut || !heureFin) {
+      return res.status(400).json({ message: "Champs requis : jour, heureDebut, heureFin." });
+    }
+
     const dispo = await Disponibilite.create({
       medecinId: medecin.idm,
-      jour,
+      jour: jour.toLowerCase(),
       heureDebut,
       heureFin,
       actif: true
@@ -27,11 +29,12 @@ const createDisponibilite = async (req, res) => {
 
     res.status(201).json(dispo);
   } catch (error) {
+    console.error("Erreur createDisponibilite:", error);
     res.status(500).json({ message: "Erreur lors de la création", error: error.message });
   }
 };
 
-// 2. Modifier disponibilité (heures uniquement)
+// 2️⃣ Modifier disponibilité (jour + heures)
 const updateDisponibilite = async (req, res) => {
   try {
     const utilisateurId = req.user.idu;
@@ -43,22 +46,24 @@ const updateDisponibilite = async (req, res) => {
     if (!medecin) return res.status(404).json({ message: "Médecin non trouvé." });
 
     const { id } = req.params;
-    const { heureDebut, heureFin } = req.body;
+    const { jour, heureDebut, heureFin } = req.body;
 
     const dispo = await Disponibilite.findOne({ where: { id, medecinId: medecin.idm } });
     if (!dispo) return res.status(404).json({ message: "Disponibilité non trouvée." });
 
+    dispo.jour = jour ? jour.toLowerCase() : dispo.jour;
     dispo.heureDebut = heureDebut || dispo.heureDebut;
     dispo.heureFin = heureFin || dispo.heureFin;
 
     await dispo.save();
     res.json(dispo);
   } catch (error) {
+    console.error("Erreur updateDisponibilite:", error);
     res.status(500).json({ message: "Erreur lors de la mise à jour", error: error.message });
   }
 };
 
-// 3. Supprimer définitivement
+// 3️⃣ Supprimer définitivement
 const deleteDisponibilite = async (req, res) => {
   try {
     const utilisateurId = req.user.idu;
@@ -70,17 +75,18 @@ const deleteDisponibilite = async (req, res) => {
     if (!medecin) return res.status(404).json({ message: "Médecin non trouvé." });
 
     const { id } = req.params;
-    const dispo = await Disponibilite.findOne({ where: { id } });
+    const dispo = await Disponibilite.findOne({ where: { id, medecinId: medecin.idm } });
     if (!dispo) return res.status(404).json({ message: "Disponibilité non trouvée." });
 
     await dispo.destroy();
-    res.json({ message: "Disponibilité supprimée définitivement." });
+    res.json({ message: "Disponibilité supprimée avec succès." });
   } catch (error) {
+    console.error("Erreur deleteDisponibilite:", error);
     res.status(500).json({ message: "Erreur lors de la suppression", error: error.message });
   }
 };
 
-// 4. Activer/Désactiver disponibilité
+// 4️⃣ Activer/Désactiver une disponibilité
 const toggleDisponibilite = async (req, res) => {
   try {
     const utilisateurId = req.user.idu;
@@ -100,11 +106,12 @@ const toggleDisponibilite = async (req, res) => {
 
     res.json({ message: `Disponibilité ${dispo.actif ? "activée" : "désactivée"}.`, dispo });
   } catch (error) {
+    console.error("Erreur toggleDisponibilite:", error);
     res.status(500).json({ message: "Erreur lors de la modification", error: error.message });
   }
 };
 
-// 5. Toutes les disponibilités + infos médecin
+// 5️⃣ Récupérer toutes les disponibilités actives
 const getAllDisponibilites = async (req, res) => {
   try {
     const dispos = await Disponibilite.findAll({
@@ -128,20 +135,20 @@ const getAllDisponibilites = async (req, res) => {
 
     res.json(dispos);
   } catch (error) {
+    console.error("Erreur getAllDisponibilites:", error);
     res.status(500).json({ message: "Erreur lors de la récupération", error: error.message });
   }
 };
 
-// 6. Récupérer toutes les disponibilités d’un médecin spécifique
+// 6️⃣ Récupérer les disponibilités d’un médecin spécifique
 const getDisponibilitesByMedecin = async (req, res) => {
   try {
     const { id } = req.params;
-    const idm = id;
-    // 🔹 Récupération du médecin avec son utilisateur lié
-    const medecin = await Medecin.findByPk(idm, {
+
+    const medecin = await Medecin.findByPk(id, {
       include: {
-        model: Utilisateur,  // ✅ pas "User"
-        as: 'utilisateur',   // ✅ alias correct
+        model: Utilisateur,
+        as: 'utilisateur',
         attributes: ['prenomu', 'nomu', 'emailu']
       }
     });
@@ -150,9 +157,8 @@ const getDisponibilitesByMedecin = async (req, res) => {
       return res.status(404).json({ message: "Médecin non trouvé." });
     }
 
-    // 🔹 Vérifie bien la FK dans Disponibilite (ici supposée MedecinId)
     const dispos = await Disponibilite.findAll({
-      where: { medecinId: idm, actif: true },
+      where: { medecinId: id },
       order: [['jour', 'ASC'], ['heureDebut', 'ASC']]
     });
 
@@ -166,13 +172,11 @@ const getDisponibilitesByMedecin = async (req, res) => {
       },
       disponibilites: dispos
     });
-
   } catch (error) {
     console.error("Erreur getDisponibilitesByMedecin:", error);
     res.status(500).json({ message: "Erreur lors de la récupération", error: error.message });
   }
 };
-
 
 module.exports = {
   createDisponibilite,

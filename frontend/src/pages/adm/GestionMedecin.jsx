@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaToggleOn, FaToggleOff } from "react-icons/fa";
 import dayjs from "dayjs";
-import api from "../../config/axios"; 
+import api from "../../config/axios";
 
-export default function AdminPatients() {
-  const [patients, setPatients] = useState([]);
+export default function AdminMedecins() {
+  const [medecins, setMedecins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,23 +20,19 @@ export default function AdminPatients() {
     telephone: "",
     email: "",
     password: "",
-    sexe: "",
-    date_naissance: "",
-    adresse: "",
-    commune: "",
-    personne_urgence: "",
-    langue_pref: "fr",
+    statut: "ACTIF",
+    specialite: "",
   });
 
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Charger les patients
-  const fetchPatients = async () => {
+  // Charger les médecins
+  const fetchMedecins = async () => {
     try {
       setLoading(true);
       setError("");
-      const { data } = await api.get("/api/patients");
-      setPatients(data);
+      const { data } = await api.get("/api/utilisateurs/public/medecins");
+      setMedecins(data);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -50,23 +46,23 @@ export default function AdminPatients() {
   };
 
   useEffect(() => {
-    fetchPatients();
+    fetchMedecins();
   }, []);
 
   // Filtrage / pagination
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return patients;
-    return patients.filter((p) => {
-      const name = `${p.prenom || ""} ${p.nom || ""}`.toLowerCase();
+    if (!q) return medecins;
+    return medecins.filter((m) => {
+      const name = `${m.prenomu || ""} ${m.nomu || ""}`.toLowerCase();
       return (
         name.includes(q) ||
-        (p.email || "").toLowerCase().includes(q) ||
-        (p.telephone || "").toLowerCase().includes(q) ||
-        (p.adresse || "").toLowerCase().includes(q)
+        (m.emailu || "").toLowerCase().includes(q) ||
+        (m.telephone || "").toLowerCase().includes(q) ||
+        (m.medecin?.specialite || "").toLowerCase().includes(q)
       );
     });
-  }, [patients, query]);
+  }, [medecins, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
@@ -80,35 +76,27 @@ export default function AdminPatients() {
       telephone: "",
       email: "",
       password: "",
-      sexe: "",
-      date_naissance: "",
-      adresse: "",
-      commune: "",
-      personne_urgence: "",
-      langue_pref: "fr",
+      statut: "ACTIF",
+      specialite: "",
     });
     setIsModalOpen(true);
   };
 
-  const openEdit = (p) => {
-    setEditing(p);
+  const openEdit = (m) => {
+    setEditing(m);
     setForm({
-      prenom: p.prenom || "",
-      nom: p.nom || "",
-      telephone: p.telephone || "",
-      email: p.email || "",
+      prenom: m.prenomu || "",
+      nom: m.nomu || "",
+      telephone: m.telephone || "",
+      email: m.emailu || "",
       password: "",
-      sexe: p.sexe || "",
-      date_naissance: p.date_naissance || "",
-      adresse: p.adresse || "",
-      commune: p.commune || "",
-      personne_urgence: p.personne_urgence || "",
-      langue_pref: p.langue_pref || "fr",
+      statut: m.statut || "ACTIF",
+      specialite: m.medecin?.specialite || "",
     });
     setIsModalOpen(true);
   };
 
-  // Créer ou modifier un patient
+  // Créer ou modifier un médecin
   const submitForm = async (e) => {
     e.preventDefault();
     setActionLoading(true);
@@ -119,15 +107,31 @@ export default function AdminPatients() {
       }
 
       if (editing) {
-        const payload = { ...form };
-        if (!payload.password) delete payload.password;
-        await api.put(`/api/patients/${editing.id_patient}`, payload);
+        const payload = { 
+          prenomu: form.prenom,
+          nomu: form.nom,
+          telephone: form.telephone,
+          emailu: form.email,
+          statut: form.statut,
+          password: form.password ? form.password : undefined,
+          medecin: { specialite: form.specialite },
+        };
+        await api.put(`/api/utilisateurs/${editing.idu}`, payload);
       } else {
-        const payload = { ...form, typecompte: "ROLE_PATIENT" };
-        await api.post(`/api/patients`, payload);
+        const payload = { 
+          prenomu: form.prenom,
+          nomu: form.nom,
+          telephone: form.telephone,
+          emailu: form.email,
+          password: form.password,
+          statut: form.statut,
+          typecompte: "ROLE_MEDECIN",
+          medecin: { specialite: form.specialite },
+        };
+        await api.post(`/api/utilisateurs`, payload);
       }
 
-      await fetchPatients();
+      await fetchMedecins();
       setIsModalOpen(false);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
@@ -136,18 +140,29 @@ export default function AdminPatients() {
     }
   };
 
-  // Supprimer un patient
-  const handleDelete = async (id) => {
+  // Supprimer un médecin
+  const handleDelete = async (idu) => {
     if (!window.confirm("Confirmer suppression : cette action est irréversible.")) return;
     try {
       setActionLoading(true);
-      await api.delete(`/api/patients/${id}`);
-      await fetchPatients();
-      alert("Patient supprimé avec succès");
+      await api.delete(`/api/utilisateurs/${idu}`);
+      await fetchMedecins();
+      alert("Médecin supprimé avec succès");
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // Activer/Désactiver
+  const toggleStatus = async (m) => {
+    try {
+      const newStatut = m.statut === "ACTIF" ? "INACTIF" : "ACTIF";
+      await api.patch(`/api/utilisateurs/${m.idu}/status`, { statut: newStatut });
+      await fetchMedecins();
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
     }
   };
 
@@ -156,12 +171,12 @@ export default function AdminPatients() {
   return (
     <div className="bg-white rounded-xl p-6 shadow-md">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-lg font-semibold">Gestion des patients</h2>
+        <h2 className="text-lg font-semibold">Gestion des médecins</h2>
         <div className="flex gap-2 items-center">
           <div className="relative">
             <input
               type="text"
-              placeholder="Rechercher (nom, email, téléphone, adresse)"
+              placeholder="Rechercher (nom, email, téléphone, spécialité)"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -176,7 +191,7 @@ export default function AdminPatients() {
             className="bg-blue-500 text-white px-3 py-2 rounded-xl hover:bg-blue-600 flex items-center gap-2"
           >
             <FaPlus />
-            Nouveau patient
+            Nouveau médecin
           </button>
         </div>
       </div>
@@ -189,16 +204,16 @@ export default function AdminPatients() {
         <div className="text-red-600 mb-4">
           {error}
           <div className="mt-2">
-            <button onClick={fetchPatients} className="bg-green-500 text-white px-3 py-1 rounded">
+            <button onClick={fetchMedecins} className="bg-green-500 text-white px-3 py-1 rounded">
               Réessayer
             </button>
           </div>
         </div>
-      ) : patients.length === 0 ? (
+      ) : medecins.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-lg mb-2">Aucun patient</div>
+          <div className="text-lg mb-2">Aucun médecin</div>
           <button onClick={openCreate} className="bg-blue-500 text-white px-4 py-2 rounded">
-            Créer un patient
+            Créer un médecin
           </button>
         </div>
       ) : (
@@ -207,41 +222,47 @@ export default function AdminPatients() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-3">Patient</th>
+                  <th className="p-3">Médecin</th>
                   <th className="p-3">Téléphone</th>
                   <th className="p-3">Email</th>
-                  <th className="p-3">Commune</th>
-                  <th className="p-3">Inscrit le</th>
+                  <th className="p-3">Spécialité</th>
+                  <th className="p-3">Statut</th>
                   <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((p) => (
-                  <tr key={p.id_patient} className="border-t hover:bg-gray-50">
+                {paginated.map((m) => (
+                  <tr key={m.idu} className="border-t hover:bg-gray-50">
                     <td className="p-3">
                       <div>
                         <p className="font-medium">
-                          {`${p.prenom || ""} ${p.nom || ""}`.trim() || "—"}
-                        </p>
-                        <p className="text-gray-500 text-xs">
-                          {p.sexe ? `Sexe: ${p.sexe}` : ""}
+                          {`${m.prenomu || ""} ${m.nomu || ""}`.trim() || "—"}
                         </p>
                       </div>
                     </td>
-                    <td className="p-3">{p.telephone || "—"}</td>
-                    <td className="p-3">{p.email || "—"}</td>
-                    <td className="p-3">{p.commune || p.adresse || "—"}</td>
-                    <td className="p-3">{formatDate(p.cree_le)}</td>
+                    <td className="p-3">{m.telephone || "—"}</td>
+                    <td className="p-3">{m.emailu || "—"}</td>
+                    <td className="p-3">{m.medecin?.specialite || "—"}</td>
+                    <td className="p-3">
+                      <button onClick={() => toggleStatus(m)} className="flex items-center gap-1">
+                        {m.statut === "ACTIF" ? (
+                          <span className="text-green-600"><FaToggleOn /></span>
+                        ) : (
+                          <span className="text-red-600"><FaToggleOff /></span>
+                        )}
+                        {m.statut}
+                      </button>
+                    </td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
-                          onClick={() => openEdit(p)}
+                          onClick={() => openEdit(m)}
                           className="text-blue-600 px-2 py-1 rounded hover:bg-blue-50 flex items-center gap-2"
                         >
                           <FaEdit /> Modifier
                         </button>
                         <button
-                          onClick={() => handleDelete(p.id_patient)}
+                          onClick={() => handleDelete(m.idu)}
                           className="text-red-600 px-2 py-1 rounded hover:bg-red-50 flex items-center gap-2"
                         >
                           <FaTrash /> Supprimer
@@ -291,7 +312,7 @@ export default function AdminPatients() {
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
-                {editing ? "Modifier patient" : "Nouveau patient"}
+                {editing ? "Modifier médecin" : "Nouveau médecin"}
               </h3>
               <button
                 type="button"
@@ -330,61 +351,24 @@ export default function AdminPatients() {
               <input
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder={
-                  editing
-                    ? "Laisser vide pour garder le mot de passe"
-                    : "Mot de passe"
-                }
+                placeholder={editing ? "Laisser vide pour garder le mot de passe" : "Mot de passe"}
                 type="password"
                 className="px-3 py-2 rounded border"
               />
               <select
-                value={form.sexe}
-                onChange={(e) => setForm({ ...form, sexe: e.target.value })}
+                value={form.statut}
+                onChange={(e) => setForm({ ...form, statut: e.target.value })}
                 className="px-3 py-2 rounded border"
               >
-                <option value="">Sexe</option>
-                <option value="M">M</option>
-                <option value="F">F</option>
+                <option value="ACTIF">ACTIF</option>
+                <option value="INACTIF">INACTIF</option>
               </select>
               <input
-                value={form.date_naissance || ""}
-                onChange={(e) =>
-                  setForm({ ...form, date_naissance: e.target.value })
-                }
-                type="date"
-                className="px-3 py-2 rounded border"
-              />
-              <input
-                value={form.adresse}
-                onChange={(e) => setForm({ ...form, adresse: e.target.value })}
-                placeholder="Adresse"
+                value={form.specialite}
+                onChange={(e) => setForm({ ...form, specialite: e.target.value })}
+                placeholder="Spécialité"
                 className="px-3 py-2 rounded border md:col-span-2"
               />
-              <input
-                value={form.commune}
-                onChange={(e) => setForm({ ...form, commune: e.target.value })}
-                placeholder="Commune"
-                className="px-3 py-2 rounded border"
-              />
-              <input
-                value={form.personne_urgence}
-                onChange={(e) =>
-                  setForm({ ...form, personne_urgence: e.target.value })
-                }
-                placeholder="Personne d'urgence"
-                className="px-3 py-2 rounded border md:col-span-2"
-              />
-              <select
-                value={form.langue_pref}
-                onChange={(e) =>
-                  setForm({ ...form, langue_pref: e.target.value })
-                }
-                className="px-3 py-2 rounded border"
-              >
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-              </select>
             </div>
 
             <div className="flex justify-end gap-2 mt-5">
@@ -400,11 +384,7 @@ export default function AdminPatients() {
                 disabled={actionLoading}
                 className="px-4 py-2 rounded bg-blue-600 text-white"
               >
-                {actionLoading
-                  ? "En cours..."
-                  : editing
-                  ? "Enregistrer"
-                  : "Créer"}
+                {actionLoading ? "En cours..." : editing ? "Enregistrer" : "Créer"}
               </button>
             </div>
 

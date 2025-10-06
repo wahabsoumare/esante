@@ -245,9 +245,9 @@ const loginUtilisateur = async (req, res) => {
       }
 
       const token = jwt.sign(
-        { id_patient: patient.id_patient, email: patient.email, role: patient.typecompte },
+        { id_patient: patient.id_patient, email: patient.email, typecompte: patient.typecompte },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: '24h'}
       );
 
       const tokenKey = `token:${token}`;

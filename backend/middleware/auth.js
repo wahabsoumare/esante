@@ -43,6 +43,7 @@ const authMiddleware = async (req, res, next) => {
 
     console.log('authMiddleware: Jeton décodé:', decoded);
     req.user = decoded;
+    console.log(req.user);
     next();
   } catch (error) {
     console.error('authMiddleware: Erreur inattendue:', error.message, error.stack);

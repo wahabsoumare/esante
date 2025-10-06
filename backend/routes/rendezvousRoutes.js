@@ -9,11 +9,17 @@ const {
   cancelRendezVous,
   getRendezVousByPatient,
   getRendezVousByMedecinMe,
-  getRendezVousByMedecin
+  getRendezVousByMedecin,
+  getAllRendezvous
 } = require('../controllers/rendezvousController');
 
 const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 
+router.get('/',
+  authMiddleware,
+  restrictToRoles('ROLE_ADMIN'),
+  getAllRendezvous
+);
 // Patient crée un RDV (auth token patient contenant id_patient)
 router.post(
   '/',

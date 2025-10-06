@@ -36,6 +36,7 @@ import Affichage from './pages/adm/Affichage'
 import PaymentsDashboard from './pages/adm/PaymentsDashboard'
 import SuccessfulConsultationsChart from './components/SuccessfulConsultationsChart'
 import CreateUser from './pages/adm/CreateUser'
+import AdminMedecins from './pages/adm/GestionMedecin'
 import EditUser from './pages/adm/EditUser'
 
 // --- Auth / utils ---
@@ -87,10 +88,10 @@ export default function App() {
         <Route index element={<DashboardOverview />} />
         <Route path="appointments" element={<AppointmentsView />} />
         <Route path="patients" element={<PatientsList />} />
-  <Route path="disponibilites" element={<DisponibilitiesPage />} />
+        <Route path="disponibilites" element={<DisponibilitiesPage />} />
         <Route path="profile" element={<MedecinProfile />} />
-  <Route path="profile/edit" element={<MedecinProfileEdit />} />
-  <Route path="profile/change-password" element={<MedecinChangePassword />} />
+        <Route path="profile/edit" element={<MedecinProfileEdit />} />
+        <Route path="profile/change-password" element={<MedecinChangePassword />} />
       </Route>
 
       {/* ---------------------- */}
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="paiements" element={<PaymentsDashboard />} />
         <Route path="users/create" element={<CreateUser />} />
         <Route path="users/edit/:id" element={<EditUser />} />
+        <Route path="medecins" element={<AdminMedecins />} />
       </Route>
 
       {/* ---------------------- */}

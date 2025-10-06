@@ -317,6 +317,22 @@ const getRendezVousByMedecin = async (req, res) => {
   }
 };
 
+
+const getAllRendezvous = async (req, res) => {
+  try {
+    const rdvs = await RendezVous.findAll({
+      include: [
+        { model: Patient, as: 'patient', attributes: ['id_patient', 'prenom', 'nom'] },
+        { model: Disponibilite, as: 'disponibilite' }
+      ],
+      order: [['dateRdv', 'ASC'], ['heureDebut', 'ASC']]
+    });
+    return res.json(rdvs);
+  } catch (error) {
+    return res.status(500).json({ message: 'Erreur récupération RDV par médecin.', error: error.message });
+  }
+};
+
 module.exports = {
   createRendezVous,
   confirmRendezVous,
@@ -324,5 +340,6 @@ module.exports = {
   cancelRendezVous,
   getRendezVousByPatient,
   getRendezVousByMedecinMe,
-  getRendezVousByMedecin
+  getRendezVousByMedecin,
+  getAllRendezvous
 };

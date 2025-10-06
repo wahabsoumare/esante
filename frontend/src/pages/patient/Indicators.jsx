@@ -15,7 +15,7 @@ export default function PatientIndicators() {
     const fetchProfile = async () => {
       try {
         // use relative path so api.baseURL + interceptors apply consistently
-        const res = await api.get(`${BASE_URL}/api/patients/profile`)
+        const res = await api.get(`/api/patients/profile`)
         setMetriques(res.data.metriques || {})
       } catch (err) {
         setError(err.response?.data?.message || err.message || 'Erreur récupération profil')
@@ -26,16 +26,16 @@ export default function PatientIndicators() {
     fetchProfile()
   }, [])
 
-  const onSubmit = async (e) => {
+  const onSubmit = async (e) => {è
     e.preventDefault()
     setError(null)
     if (!type || value === '') return setError('Type et valeur requis')
 
     try {
   // post using relative path, then re-fetch profile to ensure persisted data
-  await api.post(`${BASE_URL}/api/patients/profile/metriques`, { type, value, date })
+  await api.post(`/api/patients/profile/metriques`, { type, value, date })
   // re-fetch profile to get authoritative persisted metriques
-  const refresh = await api.get(`${BASE_URL}/api/patients/profile`)
+  const refresh = await api.get(`/api/patients/profile`)
   setMetriques(refresh.data.metriques || {})
       // reset inputs
       setType('')
