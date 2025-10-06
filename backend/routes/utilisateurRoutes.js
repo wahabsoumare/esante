@@ -11,13 +11,14 @@ const {
   getProfile,
   updateProfile,
   getPublicMedecins,
-  getPublicMedecinById
+  getPublicMedecinById,
+  getAllMedecins
 } = require('../controllers/utilisateurController');
+const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 
 router.get('/public/medecins', getPublicMedecins);
+router.get('/medecins', authMiddleware, restrictToRoles('ROLE_ADMIN'), getAllMedecins);
 router.get('/public/medecins/:id', getPublicMedecinById);
-
-const { authMiddleware, restrictToRoles } = require('../middleware/auth');
 
 router.post('/login', loginUtilisateur);
 router.post('/logout', authMiddleware, logoutUtilisateur);

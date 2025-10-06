@@ -18,6 +18,38 @@ const getAllUtilisateurs = async (req, res) => {
   }
 };
 
+const getAllMedecins = async (req, res) => {
+  try {
+    const medecins = await Utilisateur.findAll({
+      where: { typecompte: 'ROLE_MEDECIN' },
+      attributes: { exclude: ['password'] },
+      include: [{ model: Medecin, as: 'medecin' }]
+    });
+
+    const result = medecins.map(m => {
+      const medecin = m.toJSON();
+      return {
+        idm: medecin.medecin?.idm,
+        specialite: medecin.medecin?.specialite,
+        idu: medecin.idu,
+        prenomu: medecin.prenomu,
+        nomu: medecin.nomu,
+        sexe: medecin.sexe,
+        adresse: medecin.adresse,
+        telephoneu: medecin.telephoneu,
+        emailu: medecin.emailu,
+        fonction: medecin.fonction,
+        etat: medecin.etat,
+        typecompte: medecin.typecompte
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+};
+
 // Récupérer un utilisateur par ID (inclut spécialité si médecin)
 const getUtilisateurById = async (req, res) => {
   try {
@@ -421,6 +453,7 @@ const getPublicMedecinById = async (req, res) => {
 
 module.exports = {
   getAllUtilisateurs,
+  getAllMedecins,
   getUtilisateurById,
   createUtilisateur,
   updateUtilisateur,
